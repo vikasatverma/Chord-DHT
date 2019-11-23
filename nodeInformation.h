@@ -6,7 +6,7 @@
 #include <map>
 
 #include "port.h"
-#include "M.h"
+#include "config.h"
 
 using namespace std;
 
