@@ -189,6 +189,13 @@ public:
             valread = read(new_socket, buffer1, max_buffer_size);
             buffer1[valread] = '\0';
 
+//            string command;
+//            cout<<"Here";
+//            getline(cin,command);
+//            if(command=="print"){
+//                nodeInfo.printKeys();
+//            }
+//            command.erase();
             auto future = pool.submit(HandleRequest, new_socket, valread, buffer1);
             future.get();
 
@@ -251,10 +258,10 @@ int main(int argc, char *argv[]) {
         }
         else if(choice==2)
         {
-            string ip;
+            string ip="127.0.0.1";
             string port;
-            cout << "Enter ip address and port number \n";
-            cin>>ip;
+            cout << "Enter port number \n";
+//            cin>>ip;
             cin>>port;
             if(nodeInfo.getStatus() == true){
                 cout<<"Sorry but this node is already on the ring\n";
