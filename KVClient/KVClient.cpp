@@ -1,7 +1,41 @@
-#include "header.hpp"
 
-// to convert the plain text to xml format
-// to convert the plain text to xml format
+#include <cmath>
+
+#define debugger_mode 0
+
+#include <cstring>
+#include <bits/stdc++.h>
+#include <cstdio>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <iostream>
+#include <string>
+#define max_key_lenght 256 // 256 Bytes
+#define max_value_lenght (256*1024) // 256 KB
+#define max_buffer_size (256 + 256*1024 + 4*2) // key_length + value_length + delimiter_length
+
+using std::cout;
+using std::cin;
+int PORT;
+
+std::vector<std::string> split(const char *str, char c = ' ') {
+    std::vector<std::string> result;
+
+    do {
+        const char *begin = str;
+
+        while (*str != c && *str)
+            str++;
+
+        result.emplace_back(begin, str);
+    } while (0 != *str++);
+
+    return result;
+}
+
+
+
 std::string toxml(std::string msg_type, std::string key, std::string value = "") {
 
     std::string request = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";

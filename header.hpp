@@ -25,14 +25,14 @@
 #include <functional>
 #include <string>
 #include <unordered_set>
-
+#include "headers.h"
 #define True 1
 #define False 0
 #define delimiter "_||_"
 #define max_key_lenght 256 // 256 Bytes
 #define max_value_lenght (256*1024) // 256 KB
 #define max_buffer_size (256 + 256*1024 + 4*2) // key_length + value_length + delimiter_length
-#define number_of_bits 16
+#define number_of_bits M
 #define max_server int(pow(2,number_of_bits))
 
 using std::cout;

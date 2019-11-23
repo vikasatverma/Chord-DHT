@@ -1,7 +1,7 @@
 #include "headers.h"
 #include "config.h"
 #include "functions.h"
-#include "helperClass.h"
+#include "new.h"
 
 typedef long long int lli;
 

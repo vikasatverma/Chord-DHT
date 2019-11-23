@@ -2,9 +2,9 @@
 
 #include "headers.h"
 #include "config.h"
-#include "nodeInformation.h"
+#include "Node.h"
 #include "functions.h"
-#include "helperClass.h"
+#include "new.h"
 
 using namespace std;
 

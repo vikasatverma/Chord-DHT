@@ -7,8 +7,8 @@
 #include "init.h"
 #include "port.h"
 #include "functions.h"
-#include "helperClass.h"
-#include "nodeInformation.h"
+#include "new.h"
+#include "Node.h"
 
 using namespace std;
 

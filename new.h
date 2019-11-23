@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "nodeInformation.h"
+#include "Node.h"
 
 using namespace std;
 

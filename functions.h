@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "port.h"
-#include "nodeInformation.h"
+#include "Node.h"
 
 using namespace std;
 
