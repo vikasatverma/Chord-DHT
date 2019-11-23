@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "headers.h"
-#include "M.h"
+#include "config.h"
 #include "nodeInformation.h"
 #include "functions.h"
 #include "helperClass.h"
