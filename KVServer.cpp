@@ -3,6 +3,15 @@
 #include "KVStore.cpp"
 #include "ThreadPool.h"
 
+#include "init.cpp"
+#include "port.cpp"
+#include "functions.cpp"
+#include "helperClass.cpp"
+#include "nodeInformation.cpp"
+
+int PORT;
+
+NodeInformation nodeInfo = NodeInformation();
 
 KVCache cacheMap;
 
@@ -195,9 +204,6 @@ int main(int argc, char *argv[]) {
             "======================================OR====================================\n"
             "|  To restore the key value pairs from a file to the KVStore, use command:  |\n"
             "|  ./KVServer restoreFromFile [filename]                                    |\n"
-            "============================================================================\n"
-            "|  To change the port of the KVServer, use command:                         |\n"
-            "|  ./KVServer port [port_number]                                            |\n"
             "============================================================================\n";
 
     KVStore kvStore;
@@ -208,19 +214,18 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(argv[1], "dumpToFile") == 0) {
             kvStore.dumpToFile(argv[2]);
             cout << "Dump to file " << argv[2] << " successful." << std::endl;
-        } else if (strcmp(argv[1], "port") == 0) {
-            std::istringstream iss(argv[2]);
-            int val;
-            if (iss >> val) {
-                // Conversion successful
-            }
-            PORT = val;
-            cout << "Will run on port " << argv[2] << "." << std::endl;
         }
 
+        }
 
-    }
+        nodeInfo.sp.specifyPortServer();
+        PORT=nodeInfo.sp.getPortNumber();
+        cout<<"Now listening at port number "<<nodeInfo.sp.getPortNumber()<<endl;
+
+
 
     Node node;
     Node::run();
 }
+
+

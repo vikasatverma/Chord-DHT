@@ -1,5 +1,7 @@
 #include "header.hpp"
 
+int PORT;
+
 // to convert the plain text to xml format
 // to convert the plain text to xml format
 std::string toxml(std::string msg_type, std::string key, std::string value = "") {
