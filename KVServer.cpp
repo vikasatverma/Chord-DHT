@@ -15,26 +15,10 @@ public:
 
     Node() {
         IPAddress = IP;
-//        std::thread th1(run);
         run();
-//    th1.join();
 
     }
 
-//    static void dummy(int x, int id) {
-////        if(id==4)
-////            std::this_thread::sleep_for(std::chrono::seconds(1));
-////        while (x--)
-////        cout<<id<<" OYE!\n";
-//
-//        std::thread::id this_id = std::this_thread::get_id();
-//
-////        g_display_mutex.lock();
-//        std::cout << "thread " << this_id << " sleeping...\n";
-////        g_display_mutex.unlock();
-//
-//        std::this_thread::sleep_for(std::chrono::seconds(5));
-//    }
 
     virtual ~Node() = default;
 
