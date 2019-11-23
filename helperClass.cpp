@@ -1,5 +1,5 @@
 #include "headers.h"
-
+#include <openssl/sha.h>
 #include "helperClass.h"
 
 mutex mt;

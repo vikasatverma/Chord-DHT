@@ -89,38 +89,42 @@ public:
             if (debugger_mode) {
                 cout << "Value=" << value << "\n";
             }
-
-            std::map<std::string, std::string> tmp_map;
-
-            putIntoFile(key, value);
+            if(nodeInfo.getStatus() == false){
+                cout<<"Sorry this node is not in the ring\n";
+            }
+            else
+                put(key,value,nodeInfo);
             response = "Success";
+        }
+
+        else if (request_type == "DEL") {
+            value = "";
+            if (debugger_mode) {
+                cout << "Value=" << value << "\n";
+            }
 
 
-        } else if (request_type == "DEL") {
-            std::map<std::string, std::string> tmp_map;
-            populateMap(key, &tmp_map);
-            if (cacheMap.get(key) == "Does not exist" && tmp_map[key].empty()) {
-                response = "Does not exist";
-            } else {
-                tmp_map.erase(key);
-                storeMapToFile(key, &tmp_map);
-                cacheMap.del(key);
-                response = "Success";
+            if(nodeInfo.getStatus() == false){
+                cout<<"Sorry this node is not in the ring\n";
             }
-        } else if (request_type == "GET") {
-            if (cacheMap.get(key) == "Does not exist") {
-                std::map<std::string, std::string> tmp_map;
-                populateMap(key, &tmp_map);
-                if (tmp_map[key].empty()) {
-                    response = "Does not exist";
-                } else {
-                    cacheMap.put(key, tmp_map[key]);
-                    response = key + " " + cacheMap.get(key);
-                }
-            } else {
-                response = key + " " + cacheMap.get(key);
+            else {
+                put(key,value,nodeInfo);
             }
-        } else {
+            response = "Success";
+        }
+
+
+
+        else if (request_type == "GET") {
+            if(nodeInfo.getStatus() == false){
+                cout<<"Sorry this node is not in the ring\n";
+                response="Does not exist";
+            }
+            else
+                response=get(key,nodeInfo);
+        }
+
+        else {
             response = error_msg;
         }
         response = toXML(response);
@@ -221,6 +225,50 @@ int main(int argc, char *argv[]) {
         nodeInfo.sp.specifyPortServer();
         PORT=nodeInfo.sp.getPortNumber();
         cout<<"Now listening at port number "<<nodeInfo.sp.getPortNumber()<<endl;
+
+
+    int choice;
+    while(true)
+    {
+        cout << "======================================\n"
+                "Enter 1 to create a new ring\n"
+                "Enter 2 to join some existing ring\n"
+                "=========================================\n";
+
+        cin >>choice;
+
+
+        if(choice == 1)
+        {
+            if(nodeInfo.getStatus() == true){
+                cout<<"Sorry but this node is already on the ring\n";
+            }
+            else{
+                thread first(create,ref(nodeInfo));
+                first.detach();
+            }
+            break;
+        }
+        else if(choice==2)
+        {
+            string ip;
+            string port;
+            cout << "Enter ip address and port number \n";
+            cin>>ip;
+            cin>>port;
+            if(nodeInfo.getStatus() == true){
+                cout<<"Sorry but this node is already on the ring\n";
+            }
+            else
+                join(nodeInfo,ip,port);
+
+            break;
+        }
+        else
+        {
+            cout << "Wrong choice enter again\n";
+        }
+    }
 
 
 

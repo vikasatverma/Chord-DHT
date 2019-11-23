@@ -31,11 +31,11 @@ void put(string key,string value,NodeInformation &nodeInfo){
 }
 
 /* get key from the desired node */
-void get(string key,NodeInformation nodeInfo){
+std::string get(string key,NodeInformation nodeInfo){
 
     if(key == ""){
         cout<<"Key field empty\n";
-        return ;
+        return "Does not exist";
     }
     else{
         
@@ -45,11 +45,13 @@ void get(string key,NodeInformation nodeInfo){
 
         string val = help.getKeyFromNode(node,to_string(keyHash));
 
-        if(val == "")
+        if(val == ""){
             cout<<"Key Not found\n";
+        return "Does not exist";}
 
         else
             cout<<"Found "<<key<<" : "<<val<<endl;
+        return key + " " + val;
     }
 }
 
