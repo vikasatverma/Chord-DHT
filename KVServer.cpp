@@ -3,7 +3,6 @@
 #include "KVStore.cpp"
 #include "ThreadPool.h"
 
-#include "init.cpp"
 #include "port.cpp"
 #include "functions.cpp"
 #include "helperClass.cpp"
@@ -47,7 +46,6 @@ public:
         std::thread::id this_id = std::this_thread::get_id();
 
 //        g_display_mutex.lock();
-        std::cout << "thread " << this_id << " sleeping...\n";
 
         if (debugger_mode) {
             cout << buffer1 << "\n";
@@ -93,7 +91,7 @@ public:
                 cout<<"Sorry this node is not in the ring\n";
             }
             else
-                put(key,value,nodeInfo);
+                cout<<"Trying to put"<<key<<" "<<value<<std::endl;
             response = "Success";
         }
 
@@ -108,7 +106,7 @@ public:
                 cout<<"Sorry this node is not in the ring\n";
             }
             else {
-                put(key,value,nodeInfo);
+                  cout<<"Trying to delete"<<key<<std::endl;
             }
             response = "Success";
         }
@@ -121,7 +119,7 @@ public:
                 response="Does not exist";
             }
             else
-                response=get(key,nodeInfo);
+                response="Finding";
         }
 
         else {
@@ -254,7 +252,6 @@ int main(int argc, char *argv[]) {
                 thread first(create,ref(nodeInfo));
                 first.detach();
             }
-            break;
         }
         else if(choice==2)
         {
@@ -269,7 +266,8 @@ int main(int argc, char *argv[]) {
             else
                 join(nodeInfo,ip,port);
 
-            break;
+        } else if(choice==3){
+            printState(nodeInfo);
         }
         else
         {

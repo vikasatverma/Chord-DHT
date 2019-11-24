@@ -5,3 +5,4 @@ link_libraries(crypto)
 
 project(KVServer)
 add_executable(KVServer KVServer.cpp)
+add_executable(KVClient KVClient.cpp)

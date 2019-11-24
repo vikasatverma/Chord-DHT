@@ -4,19 +4,6 @@
 
 mutex mt;
 
-/* splits the command into seperate arguments */
-vector<string> HelperFunctions::splitCommand(string command){
-    vector<string> arguments;
-    int pos = 0;
-    do{
-        pos = command.find(' ');
-        string arg = command.substr(0,pos); 
-        arguments.push_back(arg);
-        command = command.substr(pos+1);
-    }while(pos != -1);
-    return arguments;
-}
-
 /* get SHA1 hash for a given key */
 lli HelperFunctions::getHash(string key){
     unsigned char obuf[41];
@@ -58,176 +45,12 @@ pair<string,int> HelperFunctions::getIpAndPort(string key){
 
     return ipAndPortPair;
 }
-
-/* key will be in form of key:value , will seperate key and value and return it */
-pair<lli,string> HelperFunctions::getKeyAndVal(string keyAndVal){
-
-    int pos = keyAndVal.find(':');
-    string key = keyAndVal.substr(0,pos);
-    string val = keyAndVal.substr(pos+1);
-
-    pair<lli,string> keyAndValPair;
-    keyAndValPair.first = stoll(key);
-    keyAndValPair.second = val;
-
-    return keyAndValPair;
-}
-
-/* will decide if id is in form of key:value or not */
-bool HelperFunctions::isKeyValue(string id){
-
-    int pos = id.find(":");
-
-    if(pos == -1)
-        return false;
-
-    for(int i=0;i<pos;i++){
-        if( !(id[i] >= 48 && id[i] <= 57) )
-            return false;
-    }
-
-    return true;
-}
-
-/* will contact a node and get value of a particular key from that node */
-string HelperFunctions::getKeyFromNode(pair< pair<string,int> , lli > node,string keyHash){
-    string ip = node.first.first;
-    int port = node.first.second;
-
-    struct sockaddr_in serverToConnectTo;
-    socklen_t l = sizeof(serverToConnectTo);
-
-    setServerDetails(serverToConnectTo,ip,port);
-
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
-
-    if(sock < 0){
-        perror("error");
-        exit(-1);
-    }
-
-    keyHash += "k";
-
-    char keyHashChar[40];
-    strcpy(keyHashChar,keyHash.c_str());
-
-    sendto(sock,keyHashChar,strlen(keyHashChar),0,(struct sockaddr *)&serverToConnectTo,l);
-
-    char valChar[100];
-    int len = recvfrom(sock,valChar,1024,0,(struct sockaddr *)&serverToConnectTo,&l);
-
-    valChar[len] = '\0';
-
-    string val = valChar;
-
-    close(sock);
-
-    return val;
-}
-
 /* set details of server to which you want to connect to */
 void HelperFunctions::setServerDetails(struct sockaddr_in &server,string ip,int port){
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = inet_addr(ip.c_str());
     server.sin_port = htons(port);
 }
-
-/* send key to node who requested for it */
-void HelperFunctions::sendKeyToNode(pair< pair<string,int> , lli > node,lli keyHash,string value){
-    string ip = node.first.first;
-    int port = node.first.second;
-
-    struct sockaddr_in serverToConnectTo;
-    socklen_t l = sizeof(serverToConnectTo);
-
-    setServerDetails(serverToConnectTo,ip,port);
-
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
-
-    if(sock < 0){
-        perror("error");
-        exit(-1);
-    }
-
-    string keyAndVal = combineIpAndPort(to_string(keyHash),value);
-
-    char keyAndValChar[100];
-    strcpy(keyAndValChar,keyAndVal.c_str());
-
-    sendto(sock,keyAndValChar,strlen(keyAndValChar),0,(struct sockaddr *)&serverToConnectTo,l);
-
-    close(sock);
-}
-
-
-/* a newly joined node uses this function to get all keys from it's successor which belongs to it now */
-void HelperFunctions::getKeysFromSuccessor(NodeInformation &nodeInfo,string ip,int port){
-    struct sockaddr_in serverToConnectTo;
-    socklen_t l = sizeof(serverToConnectTo);
-
-    setServerDetails(serverToConnectTo,ip,port);
-
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
-    if(sock < 0){
-        perror("error");
-        exit(-1);
-    }
-
-    /* node sends msg "getKeys:id" to it's successor to get all keys which belongs to this node now */
-    string id = to_string(nodeInfo.getId());
-
-
-    string msg = "getKeys:" + id;
-
-    char msgChar[40];
-    strcpy(msgChar,msg.c_str());
-
-    sendto(sock,msgChar,strlen(msgChar),0,(struct sockaddr *) &serverToConnectTo,l);
-
-    char keysAndValuesChar[2000];
-    int len = recvfrom(sock,keysAndValuesChar,2000,0,(struct sockaddr *) &serverToConnectTo,&l);
-
-    keysAndValuesChar[len] = '\0';
-
-    close(sock);
-
-    string keysAndValues = keysAndValuesChar;
-
-    vector< pair<lli,string> > keysAndValuesVector = seperateKeysAndValues(keysAndValues);
-
-    for(int i=0;i<keysAndValuesVector.size();i++){
-        nodeInfo.storeKey(keysAndValuesVector[i].first , keysAndValuesVector[i].second);
-    }
-
-}
-
-/* keys and values are in form of key1:val1;key2:val2;.. , will seperate it accordingly */
-vector< pair<lli,string> > HelperFunctions::seperateKeysAndValues(string keysAndValues){
-    int size = keysAndValues.size();
-    int i = 0;
-    vector< pair<lli,string> > res;
-
-    while(i < size){
-        string key = "";
-        while(i < size && keysAndValues[i] != ':'){
-            key += keysAndValues[i];
-            i++;
-        }
-        i++;
-
-        string val = "";
-        while(i < size && keysAndValues[i] != ';'){
-            val += keysAndValues[i];
-            i++;
-        }
-        i++;
-
-        res.push_back(make_pair(stoll(key),val));
-    }
-
-    return res;
-}
-
 /* string is in form of ip:port;ip:port;... will seperate all these ip's and ports */
 vector< pair<string,int> > HelperFunctions::seperateSuccessorList(string succList){
     int size = succList.size();
@@ -271,41 +94,6 @@ string HelperFunctions::combineIpAndPort(string ip,string port){
     }
 
     return ipAndPort;
-}
-
-/* node receives all keys from it's predecessor who is leaving the ring */
-void HelperFunctions::storeAllKeys(NodeInformation &nodeInfo,string keysAndValues){
-    int pos = keysAndValues.find("storeKeys");
-
-    vector< pair<lli,string> > res = seperateKeysAndValues(keysAndValues.substr(0,pos));
-
-    for(int i=0;i<res.size();i++){
-        nodeInfo.storeKey(res[i].first,res[i].second);
-    }
-}
-
-/* send all keys to the newly joined node which belong to it now */
-void HelperFunctions::sendNeccessaryKeys(NodeInformation &nodeInfo,int newSock,struct sockaddr_in client,string nodeIdString){
-    socklen_t l = sizeof(client);
-
-    int pos = nodeIdString.find(':');
-
-    lli nodeId = stoll(nodeIdString.substr(pos+1));
-
-    vector< pair<lli , string> > keysAndValuesVector = nodeInfo.getKeysForPredecessor(nodeId);
-
-    string keysAndValues = "";
-
-    /* will arrange all keys and val in form of key1:val1;key2:val2; */
-    for(int i=0;i<keysAndValuesVector.size();i++){
-        keysAndValues += to_string(keysAndValuesVector[i].first) + ":" + keysAndValuesVector[i].second;
-        keysAndValues += ";";
-    }
-
-    char keysAndValuesChar[2000];
-    strcpy(keysAndValuesChar,keysAndValues.c_str());
-
-    sendto(newSock,keysAndValuesChar,strlen(keysAndValuesChar),0,(struct sockaddr *)&client,l);
 }
 
 /* */
@@ -638,4 +426,3 @@ bool HelperFunctions::isNodeAlive(string ip,int port){
     else
         return false;
 }
-

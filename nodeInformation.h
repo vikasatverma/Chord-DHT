@@ -14,7 +14,7 @@ typedef long long int lli;
 
 class NodeInformation{
 	private:
-		lli id;
+		lli id{};
 		pair< pair<string,int> , lli > predecessor;
 		pair< pair<string,int> , lli > successor;
 		vector< pair< pair<string,int> , lli > > fingerTable;
@@ -24,7 +24,7 @@ class NodeInformation{
 		bool isInRing;
 
 	public:
-		SocketAndPort sp;
+		SocketAndPort sp{};
 		
 		NodeInformation();
 

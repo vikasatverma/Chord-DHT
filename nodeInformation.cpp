@@ -3,7 +3,6 @@
 #include "headers.h"
 #include "config.h"
 #include "nodeInformation.h"
-#include "functions.h"
 #include "helperClass.h"
 
 using namespace std;
@@ -47,17 +46,6 @@ void NodeInformation::setFingerTable(string ip,int port,lli hash){
 	}
 }
 
-void NodeInformation::storeKey(lli key,string val){
-	dictionary[key] = val;
-}
-
-void NodeInformation::printKeys(){
-	map<lli,string>::iterator it;
-
-	for(it = dictionary.begin(); it != dictionary.end() ; it++){
-		cout<<it->first<<" "<<it->second<<endl;
-	}
-}
 
 void NodeInformation::updateSuccessorList(){
 
@@ -78,46 +66,6 @@ void NodeInformation::updateSuccessorList(){
 
 }
 
-
-/* send all keys of this node to it's successor after it leaves the ring */
-vector< pair<lli , string> > NodeInformation::getAllKeysForSuccessor(){
-	map<lli,string>::iterator it;
-	vector< pair<lli , string> > res;
-
-	for(it = dictionary.begin(); it != dictionary.end() ; it++){
-		res.push_back(make_pair(it->first , it->second));
-		dictionary.erase(it);
-	}
-
-	return res;
-}
-
-vector< pair<lli , string> > NodeInformation::getKeysForPredecessor(lli nodeId){
-	map<lli,string>::iterator it;
-
-	vector< pair<lli , string> > res;
-	for(it = dictionary.begin(); it != dictionary.end() ; it++){
-		lli keyId = it->first;
-
-		/* if predecessor's id is more than current node's id */
-		if(id < nodeId){
-			if(keyId > id && keyId <= nodeId){
-				res.push_back(make_pair(keyId , it->second));
-				dictionary.erase(it);
-			}
-		}
-
-		/* if predecessor's id is less than current node's id */
-		else{
-			if(keyId <= nodeId || keyId > id){
-				res.push_back(make_pair(keyId , it->second));
-				dictionary.erase(it);
-			}
-		}
-	}
-
-	return res;
-}
 
 pair< pair<string,int> , lli > NodeInformation::findSuccessor(lli nodeId){
 
@@ -182,7 +130,6 @@ pair< pair<string,int> , lli > NodeInformation::findSuccessor(lli nodeId){
 			setsockopt(sockT,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
 
 			if(sockT < 0){
-				cout<<"socket cre error";
 				perror("error");
 				exit(-1);
 			}
@@ -396,7 +343,8 @@ pair< pair<string,int> , lli > NodeInformation::getPredecessor(){
 
 string NodeInformation::getValue(lli key){
 	if(dictionary.find(key) != dictionary.end()){
-		return dictionary[key];
+        cout<<"Returning "<<key<<" "<<dictionary[key]<<std::endl;
+        return dictionary[key];
 	}
 	else
 		return "";
