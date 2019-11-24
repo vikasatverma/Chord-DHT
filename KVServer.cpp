@@ -3,12 +3,8 @@
 #include "KVStore.cpp"
 #include "ThreadPool.h"
 
-#include "port.cpp"
-#include "nodeInformation.cpp"
 
 typedef long long int lli;
-
-#include "headers.h"
 #include "config.h"
 
 #ifndef functions_h
@@ -16,19 +12,12 @@ typedef long long int lli;
 
 #include <iostream>
 
-#include "port.h"
-#include "nodeInformation.h"
 
 using namespace std;
-#include "headers.h"
 #include <openssl/sha.h>
-#include "helperClass.h"
 #include <iostream>
 
-#include "headers.h"
 #include "config.h"
-#include "nodeInformation.h"
-#include "helperClass.h"
 
 using namespace std;
 
