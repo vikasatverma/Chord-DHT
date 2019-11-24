@@ -75,9 +75,13 @@ A Makefile has also been included. Just type make to build the whole project
 
 
 Server Compilation:
+
 g++ KVServer.cpp -lcrypto -pthread -o KVServer
+
 ./KVServer
 
 Client:
+
 g++ KVClient.cpp 
+
 ./KVClient port <port>
