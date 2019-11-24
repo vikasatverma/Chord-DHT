@@ -81,29 +81,20 @@ class HelperFunctions{
 
 public:
 
-    vector<string> splitCommand(string command);
     string combineIpAndPort(string ip,string port);
-    vector< pair<lli,string> > seperateKeysAndValues(string keysAndValues);
     vector< pair<string,int> > seperateSuccessorList(string succList);
     string splitSuccessorList(vector< pair< pair<string,int> , lli > > list);
 
     lli getHash(string key);
     pair<string,int> getIpAndPort(string key);
 
-    bool isKeyValue(string id);
 
     bool isNodeAlive(string ip,int port);
 
     void setServerDetails(struct sockaddr_in &server,string ip,int port);
     void setTimer(struct timeval &timer);
 
-    void sendNeccessaryKeys(NodeInformation &nodeInfo,int newSock,struct sockaddr_in client,string nodeIdString);
-    void sendKeyToNode(pair< pair<string,int> , lli > node,lli keyHash,string value);
     void sendValToNode(NodeInformation nodeInfo,int newSock,struct sockaddr_in client,string nodeIdString);
-    string getKeyFromNode(pair< pair<string,int> , lli > node,string keyHash);
-    pair<lli,string> getKeyAndVal(string keyAndVal);
-    void getKeysFromSuccessor(NodeInformation &nodeInfo,string ip,int port);
-    void storeAllKeys(NodeInformation &nodeInfo,string keysAndValues);
 
     pair< pair<string,int> , lli > getPredecessorNode(string ip,int port,string ipClient,int ipPort,bool forStabilize);
     lli getSuccessorId(string ip,int port);
@@ -125,13 +116,9 @@ public:
 #include <vector>
 #include <map>
 
-#include "port.h"
 #include "config.h"
 
 #include <iostream>
-
-#include "headers.h"
-#include "port.h"
 
 #ifndef port_h
 #define port_h
@@ -456,7 +443,7 @@ void NodeInformation::checkSuccessor(){
     string ip = successor.first.first;
     int port = successor.first.second;
 
-    if(help.isNodeAlive(ip,port) == false){
+    if(!help.isNodeAlive(ip, port)){
         successor = successorList[2];
         updateSuccessorList();
     }
@@ -541,7 +528,6 @@ mutex mt;
 
 #include <iostream>
 
-#include "nodeInformation.h"
 
 using namespace std;
 
@@ -974,8 +960,6 @@ bool HelperFunctions::isNodeAlive(string ip,int port){
 
 typedef long long int lli;
 
-void put(string key,string value,NodeInformation &nodeInfo);
-std::string get(string key,NodeInformation nodeInfo);
 void create(NodeInformation &nodeInfo);
 void join(NodeInformation &nodeInfo,string ip,string port);
 void printState(NodeInformation nodeInfo);
@@ -984,8 +968,6 @@ void doStabilize(NodeInformation &nodeInfo);
 void callNotify(NodeInformation &nodeInfo,string ipAndPort);
 void callFixFingers(NodeInformation &nodeInfo);
 void doTask(NodeInformation &nodeInfo,int newSock,struct sockaddr_in client,string nodeIdString);
-void leave(NodeInformation &nodeInfo);
-void showHelp();
 
 #endif
 
@@ -1243,15 +1225,6 @@ public:
 
     virtual ~Node() = default;
 
-
-    int getServerOrKeyID() {
-        std::size_t str_hash = std::hash<std::string>{}(std::to_string(PORT) + IP);
-
-        int serverID =
-                str_hash % max_server; // NOLINT(bugprone-narrowing-conversions,cppcoreguidelines-narrowing-conversions)
-
-        return serverID;
-    }
 
 
     static void HandleRequest(int new_socket, int valread, const char *buffer1) {
