@@ -2,151 +2,143 @@
 #include "KVCache.cpp"
 #include "KVStore.cpp"
 #include "ThreadPool.h"
-
+#include <vector>
+#include <map>
+#include <iostream>
+#include <openssl/sha.h>
+#include <netinet/in.h>
 
 typedef long long int lli;
-#include "config.h"
-
-#ifndef functions_h
-#define functions_h
-
-#include <iostream>
-
-
-using namespace std;
-#include <openssl/sha.h>
-#include <iostream>
-
-#include "config.h"
-
 using namespace std;
 
 
-class SocketAndPort{
+class PORTClass {
 private:
     int portNoServer;
     int sock;
     struct sockaddr_in current;
 
 public:
-    void specifyPortServer();
+    void setPortServer();
+
     string getIpAddress();
+
     int getPortNumber();
+
     int getSocketFd();
 };
 
-class NodeInformation{
+class ServerClass {
 private:
-    lli id{};
-    pair< pair<string,int> , lli > predecessor;
-    pair< pair<string,int> , lli > successor;
-    vector< pair< pair<string,int> , lli > > fingerTable;
-    map<lli,string> dictionary;
-    vector< pair< pair<string,int> , lli > > successorList;
-
-    bool isInRing;
+    pair<pair<string, int>, lli> successor;
+    vector<pair<pair<string, int>, lli> > successorList;
 
 public:
-    SocketAndPort sp{};
+    PORTClass sp{};
 
-    NodeInformation();
+    ServerClass();
 
-    pair< pair<string,int> , lli > findSuccessor(lli nodeId);
-    pair< pair<string,int> , lli > closestPrecedingNode(lli nodeId);
+    pair<pair<string, int>, lli> findSuccessor(lli nodeId);
+
+    pair<pair<string, int>, lli> closestPrecedingNode(lli nodeId);
+
     void fixFingers();
+
     void stabilize();
-    void notify(pair< pair<string,int> , lli > node);
+
+    void notify(pair<pair<string, int>, lli> node);
+
     void checkPredecessor();
+
     void checkSuccessor();
+
     void updateSuccessorList();
 
-    void setSuccessor(string ip,int port,lli hash);
-    void setSuccessorList(string ip,int port,lli hash);
-    void setPredecessor(string ip,int port,lli hash);
-    void setFingerTable(string ip,int port,lli hash);
-    void setId(lli id);
-    void setStatus();
+    void setSuccessor(string ip, int port, lli hash);
+
+    void setSuccessorList(string ip, int port, lli hash);
+
+    void setFingerTable(string ip, int port, lli hash);
+
 
     lli getId();
-    string getValue(lli key);
-    vector< pair< pair<string,int> , lli > > getFingerTable();
-    pair< pair<string,int> , lli > getSuccessor();
-    pair< pair<string,int> , lli > getPredecessor();
-    vector< pair< pair<string,int> , lli > > getSuccessorList();
+
+
+    vector<pair<pair<string, int>, lli> > getFingerTable();
+
+    pair<pair<string, int>, lli> getSuccessor();
+
+    pair<pair<string, int>, lli> getPredecessor();
+
+    vector<pair<pair<string, int>, lli> > getSuccessorList();
+
     bool getStatus();
+
+    bool isInRing;
+    pair<pair<string, int>, lli> predecessor;
+    lli id{};
+    vector<pair<pair<string, int>, lli> > fingerTable;
 };
 
 
-class HelperFunctions{
+class HelperFunctions {
 
 public:
 
-    string combineIpAndPort(string ip,string port);
-    vector< pair<string,int> > seperateSuccessorList(string succList);
-    string splitSuccessorList(vector< pair< pair<string,int> , lli > > list);
+    string combineIpAndPort(string ip, string port);
+
+    vector<pair<string, int> > seperateSuccessorList(string succList);
+
+    string splitSuccessorList(vector<pair<pair<string, int>, lli> > list);
 
     lli getHash(string key);
-    pair<string,int> getIpAndPort(string key);
+
+    pair<string, int> getIpAndPort(string key);
 
 
-    bool isNodeAlive(string ip,int port);
+    bool isNodeAlive(string ip, int port);
 
-    void setServerDetails(struct sockaddr_in &server,string ip,int port);
+    void setServerDetails(struct sockaddr_in &server, string ip, int port);
+
     void setTimer(struct timeval &timer);
 
-    void sendValToNode(NodeInformation nodeInfo,int newSock,struct sockaddr_in client,string nodeIdString);
 
-    pair< pair<string,int> , lli > getPredecessorNode(string ip,int port,string ipClient,int ipPort,bool forStabilize);
-    lli getSuccessorId(string ip,int port);
+    pair<pair<string, int>, lli>
+    getPredecessorNode(string ip, int port, string ipClient, int ipPort, bool forStabilize);
 
-    void sendPredecessor(NodeInformation nodeInfo,int newSock,struct sockaddr_in client);
-    void sendSuccessor(NodeInformation nodeInfo,string nodeIdString,int newSock,struct sockaddr_in client);
-    void sendSuccessorId(NodeInformation nodeInfo,int newSock,struct sockaddr_in client);
-    void sendAcknowledgement(int newSock,struct sockaddr_in client);
+    lli getSuccessorId(string ip, int port);
 
-    vector< pair<string,int> > getSuccessorListFromNode(string ip,int port);
-    void sendSuccessorList(NodeInformation &nodeInfo,int sock,struct sockaddr_in client);
+    void sendPredecessor(ServerClass nodeInfo, int newSock, struct sockaddr_in client);
+
+    void sendSuccessor(ServerClass nodeInfo, string nodeIdString, int newSock, struct sockaddr_in client);
+
+    void sendSuccessorId(ServerClass nodeInfo, int newSock, struct sockaddr_in client);
+
+    void sendAcknowledgement(int newSock, struct sockaddr_in client);
+
+    vector<pair<string, int> > getSuccessorListFromNode(string ip, int port);
+
+    void sendSuccessorList(ServerClass &nodeInfo, int sock, struct sockaddr_in client);
 };
 
 
-#ifndef nodeInfo_h
-#define nodeInfo_h
-
-#include <iostream>
-#include <vector>
-#include <map>
-
-#include "config.h"
-
-#include <iostream>
-
-#ifndef port_h
-#define port_h
-
-#include <iostream>
-#include <netinet/in.h>
-using namespace std;
-
-
-#endif
-
 /* generate a port number to run on */
-void SocketAndPort::specifyPortServer(){
+void PORTClass::setPortServer() {
 
     /* generating a port number between 1024 and 65535 */
     srand(time(0));
     portNoServer = rand() % 65536;
-    if(portNoServer < 1024)
+    if (portNoServer < 1024)
         portNoServer += 1024;
 
     socklen_t len = sizeof(current);
 
-    sock = socket(AF_INET,SOCK_DGRAM,0);
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
     current.sin_family = AF_INET;
     current.sin_port = htons(portNoServer);
     current.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    if( bind(sock,(struct sockaddr *)&current,len) < 0){
+    if (bind(sock, (struct sockaddr *) &current, len) < 0) {
         perror("error");
         exit(-1);
     }
@@ -154,120 +146,100 @@ void SocketAndPort::specifyPortServer(){
 }
 
 /* get IP Address */
-string SocketAndPort::getIpAddress(){
+string PORTClass::getIpAddress() {
     string ip = inet_ntoa(current.sin_addr);
     return ip;
 }
 
 /* get port number on which it is listening */
-int SocketAndPort::getPortNumber(){
+int PORTClass::getPortNumber() {
     return portNoServer;
 }
 
 /* */
-int SocketAndPort::getSocketFd(){
+int PORTClass::getSocketFd() {
     return sock;
 }
 
 using namespace std;
 
 
-#endif
-NodeInformation::NodeInformation(){
-    fingerTable = vector< pair< pair<string,int> , lli > >(M+1);
-    successorList = vector< pair< pair<string,int> , lli > >(R+1);
+ServerClass::ServerClass() {
+    fingerTable = vector<pair<pair<string, int>, lli> >(M + 1);
+    successorList = vector<pair<pair<string, int>, lli> >(R + 1);
     isInRing = false;
 }
 
-void NodeInformation::setStatus(){
-    isInRing = true;
-}
 
-void NodeInformation::setSuccessor(string ip,int port,lli hash){
+void ServerClass::setSuccessor(string ip, int port, lli hash) {
     successor.first.first = ip;
     successor.first.second = port;
     successor.second = hash;
 }
 
-void NodeInformation::setSuccessorList(string ip,int port,lli hash){
-    for(int i=1;i<=R;i++){
-        successorList[i] = make_pair(make_pair(ip,port),hash);
+void ServerClass::setSuccessorList(string ip, int port, lli hash) {
+    for (int i = 1; i <= R; i++) {
+        successorList[i] = make_pair(make_pair(ip, port), hash);
     }
 }
 
-void NodeInformation::setPredecessor(string ip,int port,lli hash){
-    predecessor.first.first = ip;
-    predecessor.first.second = port;
-    predecessor.second = hash;
-}
-
-void NodeInformation::setId(lli nodeId){
-    id = nodeId;
-}
-
-void NodeInformation::setFingerTable(string ip,int port,lli hash){
-    for(int i=1;i<=M;i++){
-        fingerTable[i] = make_pair(make_pair(ip,port),hash);
+void ServerClass::setFingerTable(string ip, int port, lli hash) {
+    for (int i = 1; i <= M; i++) {
+        fingerTable[i] = make_pair(make_pair(ip, port), hash);
     }
 }
 
 
-void NodeInformation::updateSuccessorList(){
+void ServerClass::updateSuccessorList() {
 
     HelperFunctions help;
 
-    vector< pair<string,int> > list = help.getSuccessorListFromNode(successor.first.first,successor.first.second);
+    vector<pair<string, int> > list = help.getSuccessorListFromNode(successor.first.first, successor.first.second);
 
-    if(list.size() != R)
+    if (list.size() != R)
         return;
 
     successorList[1] = successor;
 
-    for(int i=2;i<=R;i++){
-        successorList[i].first.first = list[i-2].first;
-        successorList[i].first.second = list[i-2].second;
-        successorList[i].second = help.getHash(list[i-2].first + ":" + to_string(list[i-2].second));
+    for (int i = 2; i <= R; i++) {
+        successorList[i].first.first = list[i - 2].first;
+        successorList[i].first.second = list[i - 2].second;
+        successorList[i].second = help.getHash(list[i - 2].first + ":" + to_string(list[i - 2].second));
     }
 
 }
 
 
-pair< pair<string,int> , lli > NodeInformation::findSuccessor(lli nodeId){
+pair<pair<string, int>, lli> ServerClass::findSuccessor(lli nodeId) {
 
-    pair < pair<string,int> , lli > self;
+    pair<pair<string, int>, lli> self;
     self.first.first = sp.getIpAddress();
     self.first.second = sp.getPortNumber();
     self.second = id;
 
-    if(nodeId > id && nodeId <= successor.second){
+    if (nodeId > id && nodeId <= successor.second) {
         return successor;
     }
 
         /* */
-    else if(id == successor.second || nodeId == id){
+    else if (id == successor.second || nodeId == id) {
         return self;
-    }
-
-    else if(successor.second == predecessor.second){
-        if(successor.second >= id){
-            if(nodeId > successor.second || nodeId < id)
+    } else if (successor.second == predecessor.second) {
+        if (successor.second >= id) {
+            if (nodeId > successor.second || nodeId < id)
                 return self;
-        }
-        else{
-            if((nodeId > id && nodeId > successor.second) || (nodeId < id && nodeId < successor.second))
+        } else {
+            if ((nodeId > id && nodeId > successor.second) || (nodeId < id && nodeId < successor.second))
                 return successor;
             else
                 return self;
         }
-    }
+    } else {
 
-    else{
-
-        pair < pair<string,int> , lli > node = closestPrecedingNode(nodeId);
-        if(node.second == id){
+        pair<pair<string, int>, lli> node = closestPrecedingNode(nodeId);
+        if (node.second == id) {
             return successor;
-        }
-        else{
+        } else {
 
             /* connect to node which will now find the successor */
             struct sockaddr_in serverToConnectTo;
@@ -277,32 +249,32 @@ pair< pair<string,int> , lli > NodeInformation::findSuccessor(lli nodeId){
             int port;
 
             /* if this node couldn't find closest preciding node for given node id then now ask it's successor to do so */
-            if(node.second == -1){
+            if (node.second == -1) {
                 node = successor;
             }
 
             HelperFunctions help;
 
-            help.setServerDetails(serverToConnectTo,node.first.first,node.first.second);
+            help.setServerDetails(serverToConnectTo, node.first.first, node.first.second);
 
             /* set timer on this socket */
             struct timeval timer;
             help.setTimer(timer);
 
 
-            int sockT = socket(AF_INET,SOCK_DGRAM,0);
+            int sockT = socket(AF_INET, SOCK_DGRAM, 0);
 
-            setsockopt(sockT,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
+            setsockopt(sockT, SOL_SOCKET, SO_RCVTIMEO, (char *) &timer, sizeof(struct timeval));
 
-            if(sockT < 0){
+            if (sockT < 0) {
                 perror("error");
                 exit(-1);
             }
 
             /* send the node's id to the other node */
             char nodeIdChar[40];
-            strcpy(nodeIdChar,to_string(nodeId).c_str());
-            sendto(sockT, nodeIdChar, strlen(nodeIdChar), 0, (struct sockaddr*) &serverToConnectTo, len);
+            strcpy(nodeIdChar, to_string(nodeId).c_str());
+            sendto(sockT, nodeIdChar, strlen(nodeIdChar), 0, (struct sockaddr *) &serverToConnectTo, len);
 
             /* receive ip and port of node's successor as ip:port*/
             char ipAndPort[40];
@@ -311,8 +283,8 @@ pair< pair<string,int> , lli > NodeInformation::findSuccessor(lli nodeId){
 
             close(sockT);
 
-            if(l < 0){
-                pair < pair<string,int> , lli > node;
+            if (l < 0) {
+                pair<pair<string, int>, lli> node;
                 node.first.first = "";
                 node.second = -1;
                 node.first.second = -1;
@@ -324,7 +296,7 @@ pair< pair<string,int> , lli > NodeInformation::findSuccessor(lli nodeId){
             /* set ip,port and hash for this node and return it */
             string key = ipAndPort;
             lli hash = help.getHash(ipAndPort);
-            pair<string,int> ipAndPortPair = help.getIpAndPort(key);
+            pair<string, int> ipAndPortPair = help.getIpAndPort(key);
             node.first.first = ipAndPortPair.first;
             node.first.second = ipAndPortPair.second;
             node.second = hash;
@@ -334,56 +306,58 @@ pair< pair<string,int> , lli > NodeInformation::findSuccessor(lli nodeId){
     }
 }
 
-pair< pair<string,int> , lli > NodeInformation::closestPrecedingNode(lli nodeId){
+pair<pair<string, int>, lli> ServerClass::closestPrecedingNode(lli nodeId) {
     HelperFunctions help;
 
-    for(int i=M;i>=1;i--){
-        if(fingerTable[i].first.first == "" || fingerTable[i].first.second == -1 || fingerTable[i].second == -1){
+    for (int i = M; i >= 1; i--) {
+        if (fingerTable[i].first.first == "" || fingerTable[i].first.second == -1 || fingerTable[i].second == -1) {
             continue;
         }
 
-        if(fingerTable[i].second > id && fingerTable[i].second < nodeId){
+        if (fingerTable[i].second > id && fingerTable[i].second < nodeId) {
             return fingerTable[i];
-        }
-        else{
+        } else {
 
-            lli successorId = help.getSuccessorId(fingerTable[i].first.first,fingerTable[i].first.second);
+            lli successorId = help.getSuccessorId(fingerTable[i].first.first, fingerTable[i].first.second);
 
-            if(successorId == -1)
+            if (successorId == -1)
                 continue;
 
-            if(fingerTable[i].second > successorId){
-                if((nodeId <= fingerTable[i].second && nodeId <= successorId) || (nodeId >= fingerTable[i].second && nodeId >= successorId)){
+            if (fingerTable[i].second > successorId) {
+                if ((nodeId <= fingerTable[i].second && nodeId <= successorId) ||
+                    (nodeId >= fingerTable[i].second && nodeId >= successorId)) {
                     return fingerTable[i];
                 }
-            }
-            else if(fingerTable[i].second < successorId && nodeId > fingerTable[i].second && nodeId < successorId){
+            } else if (fingerTable[i].second < successorId && nodeId > fingerTable[i].second && nodeId < successorId) {
                 return fingerTable[i];
             }
 
-            pair< pair<string,int> , lli > predNode = help.getPredecessorNode(fingerTable[i].first.first,fingerTable[i].first.second,"",-1,false);
+            pair<pair<string, int>, lli> predNode = help.getPredecessorNode(fingerTable[i].first.first,
+                                                                            fingerTable[i].first.second, "", -1, false);
             lli predecessorId = predNode.second;
 
-            if(predecessorId != -1 && fingerTable[i].second < predecessorId){
-                if((nodeId <= fingerTable[i].second && nodeId <= predecessorId) || (nodeId >= fingerTable[i].second && nodeId >= predecessorId)){
+            if (predecessorId != -1 && fingerTable[i].second < predecessorId) {
+                if ((nodeId <= fingerTable[i].second && nodeId <= predecessorId) ||
+                    (nodeId >= fingerTable[i].second && nodeId >= predecessorId)) {
                     return predNode;
                 }
             }
-            if(predecessorId != -1 && fingerTable[i].second > predecessorId && nodeId >= predecessorId && nodeId <= fingerTable[i].second){
+            if (predecessorId != -1 && fingerTable[i].second > predecessorId && nodeId >= predecessorId &&
+                nodeId <= fingerTable[i].second) {
                 return predNode;
             }
         }
     }
 
     /* */
-    pair< pair<string,int> , lli > node;
+    pair<pair<string, int>, lli> node;
     node.first.first = "";
     node.first.second = -1;
     node.second = -1;
     return node;
 }
 
-void NodeInformation::stabilize(){
+void ServerClass::stabilize() {
 
     /* get predecessor of successor */
 
@@ -392,18 +366,20 @@ void NodeInformation::stabilize(){
     string ownIp = sp.getIpAddress();
     int ownPort = sp.getPortNumber();
 
-    if(help.isNodeAlive(successor.first.first,successor.first.second) == false)
+    if (help.isNodeAlive(successor.first.first, successor.first.second) == false)
         return;
 
     /* get predecessor of successor */
-    pair< pair<string,int> , lli > predNode = help.getPredecessorNode(successor.first.first,successor.first.second,ownIp,ownPort,true);
+    pair<pair<string, int>, lli> predNode = help.getPredecessorNode(successor.first.first, successor.first.second,
+                                                                    ownIp, ownPort, true);
 
     lli predecessorHash = predNode.second;
 
-    if(predecessorHash == -1 || predecessor.second == -1)
+    if (predecessorHash == -1 || predecessor.second == -1)
         return;
 
-    if(predecessorHash > id || (predecessorHash > id && predecessorHash < successor.second) || (predecessorHash < id && predecessorHash < successor.second)){
+    if (predecessorHash > id || (predecessorHash > id && predecessorHash < successor.second) ||
+        (predecessorHash < id && predecessorHash < successor.second)) {
         successor = predNode;
     }
 
@@ -411,21 +387,21 @@ void NodeInformation::stabilize(){
 }
 
 /* check if current node's predecessor is still alive */
-void NodeInformation::checkPredecessor(){
-    if(predecessor.second == -1)
+void ServerClass::checkPredecessor() {
+    if (predecessor.second == -1)
         return;
 
     HelperFunctions help;
     string ip = predecessor.first.first;
     int port = predecessor.first.second;
 
-    if(help.isNodeAlive(ip,port) == false){
+    if (help.isNodeAlive(ip, port) == false) {
         /* if node has same successor and predecessor then set node as it's successor itself */
-        if(predecessor.second == successor.second){
+        if (predecessor.second == successor.second) {
             successor.first.first = sp.getIpAddress();
             successor.first.second = sp.getPortNumber();
             successor.second = id;
-            setSuccessorList(successor.first.first,successor.first.second,id);
+            setSuccessorList(successor.first.first, successor.first.second, id);
         }
         predecessor.first.first = "";
         predecessor.first.second = -1;
@@ -435,22 +411,22 @@ void NodeInformation::checkPredecessor(){
 }
 
 /* check if current node's successor is still alive */
-void NodeInformation::checkSuccessor(){
-    if(successor.second == id)
+void ServerClass::checkSuccessor() {
+    if (successor.second == id)
         return;
 
     HelperFunctions help;
     string ip = successor.first.first;
     int port = successor.first.second;
 
-    if(!help.isNodeAlive(ip, port)){
+    if (!help.isNodeAlive(ip, port)) {
         successor = successorList[2];
         updateSuccessorList();
     }
 
 }
 
-void NodeInformation::notify(pair< pair<string,int> , lli > node){
+void ServerClass::notify(pair<pair<string, int>, lli> node) {
 
     /* get id of node and predecessor */
     lli predecessorHash = predecessor.second;
@@ -459,30 +435,27 @@ void NodeInformation::notify(pair< pair<string,int> , lli > node){
     predecessor = node;
 
     /* if node's successor is node itself then set it's successor to this node */
-    if(successor.second == id){
+    if (successor.second == id) {
         successor = node;
     }
 }
 
-void NodeInformation::fixFingers(){
+void ServerClass::fixFingers() {
 
     HelperFunctions help;
 
-    //if(help.isNodeAlive(successor.first.first,successor.first.second) == false)
-    //return;
-    //cout<<"in fix fingers - "<<successor.second<<endl;
 
     int next = 1;
-    lli mod = pow(2,M);
+    lli mod = pow(2, M);
 
-    while(next <= M){
-        if(help.isNodeAlive(successor.first.first,successor.first.second) == false)
+    while (next <= M) {
+        if (!help.isNodeAlive(successor.first.first, successor.first.second))
             return;
 
-        lli newId = id + pow(2,next-1);
+        lli newId = id + pow(2, next - 1);
         newId = newId % mod;
-        pair< pair<string,int> , lli > node = findSuccessor(newId);
-        if(node.first.first == "" || node.second == -1 || node.first.second == -1 )
+        pair<pair<string, int>, lli> node = findSuccessor(newId);
+        if (node.first.first == "" || node.second == -1 || node.first.second == -1)
             break;
         fingerTable[next] = node;
         next++;
@@ -490,71 +463,51 @@ void NodeInformation::fixFingers(){
 
 }
 
-vector< pair< pair<string,int> , lli > > NodeInformation::getFingerTable(){
-    return fingerTable;
+vector<pair<pair<string, int>, lli> > ServerClass::getFingerTable() {
 }
 
-lli NodeInformation::getId(){
+lli ServerClass::getId() {
     return id;
 }
 
-pair< pair<string,int> , lli > NodeInformation::getSuccessor(){
+pair<pair<string, int>, lli> ServerClass::getSuccessor() {
     return successor;
 }
 
-pair< pair<string,int> , lli > NodeInformation::getPredecessor(){
+pair<pair<string, int>, lli> ServerClass::getPredecessor() {
     return predecessor;
 }
 
-string NodeInformation::getValue(lli key){
-    if(dictionary.find(key) != dictionary.end()){
-        cout<<"Returning "<<key<<" "<<dictionary[key]<<std::endl;
-        return dictionary[key];
-    }
-    else
-        return "";
-}
 
-vector< pair< pair<string,int> , lli > > NodeInformation::getSuccessorList(){
+vector<pair<pair<string, int>, lli> > ServerClass::getSuccessorList() {
     return successorList;
 }
 
-bool NodeInformation::getStatus(){
+bool ServerClass::getStatus() {
     return isInRing;
 }
-mutex mt;
-#ifndef helper_h
-#define helper_h
-
-#include <iostream>
 
 
-using namespace std;
-
-typedef long long int lli;
-
-
-#endif
 /* get SHA1 hash for a given key */
-lli HelperFunctions::getHash(string key){
+lli HelperFunctions::getHash(string key) {
     unsigned char obuf[41];
     char finalHash[41];
     string keyHash = "";
     int i;
-    lli mod = pow(2,M);
+    lli mod = pow(2, M);
 
 
     /* convert string to an unsigned char array because SHA1 takes unsigned char array as parameter */
-    unsigned char unsigned_key[key.length()+1];
-    for(i=0;i<key.length();i++){
+    unsigned char unsigned_key[key.length() + 1];
+    for (i = 0; i < key.length(); i++) {
         unsigned_key[i] = key[i];
     }
     unsigned_key[i] = '\0';
 
 
-    SHA1(unsigned_key,sizeof(unsigned_key),obuf);
-    for (i = 0; i < M/8; i++) {
-        sprintf(finalHash,"%d",obuf[i]);
+    SHA1(unsigned_key, sizeof(unsigned_key), obuf);
+    for (i = 0; i < M / 8; i++) {
+        sprintf(finalHash, "%d", obuf[i]);
         keyHash += finalHash;
     }
 
@@ -564,124 +517,113 @@ lli HelperFunctions::getHash(string key){
 }
 
 /* key will be in form of ip:port , will seperate ip and port and return it */
-pair<string,int> HelperFunctions::getIpAndPort(string key){
+pair<string, int> HelperFunctions::getIpAndPort(string key) {
 
     int pos = key.find(':');
-    string ip = key.substr(0,pos);
-    string port = key.substr(pos+1);
+    string ip = key.substr(0, pos);
+    string port = key.substr(pos + 1);
 
-    pair<string,int> ipAndPortPair;
+    pair<string, int> ipAndPortPair;
     ipAndPortPair.first = ip;
     ipAndPortPair.second = atoi(port.c_str());
 
     return ipAndPortPair;
 }
+
 /* set details of server to which you want to connect to */
-void HelperFunctions::setServerDetails(struct sockaddr_in &server,string ip,int port){
+void HelperFunctions::setServerDetails(struct sockaddr_in &server, string ip, int port) {
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = inet_addr(ip.c_str());
     server.sin_port = htons(port);
 }
+
 /* string is in form of ip:port;ip:port;... will seperate all these ip's and ports */
-vector< pair<string,int> > HelperFunctions::seperateSuccessorList(string succList){
+vector<pair<string, int> > HelperFunctions::seperateSuccessorList(string succList) {
     int size = succList.size();
     int i = 0;
-    vector< pair<string,int> > res;
+    vector<pair<string, int> > res;
 
-    while(i < size){
+    while (i < size) {
         string ip = "";
-        while(i < size && succList[i] != ':'){
+        while (i < size && succList[i] != ':') {
             ip += succList[i];
             i++;
         }
         i++;
 
         string port = "";
-        while(i < size && succList[i] != ';'){
+        while (i < size && succList[i] != ';') {
             port += succList[i];
             i++;
         }
         i++;
 
-        res.push_back(make_pair(ip,stoi(port)));
+        res.push_back(make_pair(ip, stoi(port)));
     }
 
     return res;
 }
 
 /* combine ip and port as ip:port and return string */
-string HelperFunctions::combineIpAndPort(string ip,string port){
+string HelperFunctions::combineIpAndPort(string ip, string port) {
     string ipAndPort = "";
-    int i=0;
+    int i = 0;
 
-    for(i=0;i<ip.size();i++){
+    for (i = 0; i < ip.size(); i++) {
         ipAndPort += ip[i];
     }
 
     ipAndPort += ':';
 
-    for(i=0;i<port.size();i++){
+    for (i = 0; i < port.size(); i++) {
         ipAndPort += port[i];
     }
 
     return ipAndPort;
 }
 
-/* */
-void HelperFunctions::sendValToNode(NodeInformation nodeInfo,int newSock,struct sockaddr_in client,string nodeIdString){
-    nodeIdString.pop_back();
-    lli key = stoll(nodeIdString);
-    string val = nodeInfo.getValue(key);
-
-    socklen_t l = sizeof(client);
-
-    char valChar[100];
-    strcpy(valChar,val.c_str());
-
-    sendto(newSock,valChar,strlen(valChar),0,(struct sockaddr *)&client,l);
-}
 
 /* send successor id of current node to the contacting node */
-void HelperFunctions::sendSuccessorId(NodeInformation nodeInfo,int newSock,struct sockaddr_in client){
+void HelperFunctions::sendSuccessorId(ServerClass nodeInfo, int newSock, struct sockaddr_in client) {
 
-    pair< pair<string,int> , lli > succ = nodeInfo.getSuccessor();
+    pair<pair<string, int>, lli> succ = nodeInfo.getSuccessor();
     string succId = to_string(succ.second);
     char succIdChar[40];
 
     socklen_t l = sizeof(client);
 
-    strcpy(succIdChar,succId.c_str());
+    strcpy(succIdChar, succId.c_str());
 
-    sendto(newSock,succIdChar,strlen(succIdChar),0,(struct sockaddr *)&client,l);
+    sendto(newSock, succIdChar, strlen(succIdChar), 0, (struct sockaddr *) &client, l);
 
 }
 
 /* find successor of contacting node and send it's ip:port to it */
-void HelperFunctions::sendSuccessor(NodeInformation nodeInfo,string nodeIdString,int newSock,struct sockaddr_in client){
+void HelperFunctions::sendSuccessor(ServerClass nodeInfo, string nodeIdString, int newSock, struct sockaddr_in client) {
 
     lli nodeId = stoll(nodeIdString);
 
     socklen_t l = sizeof(client);
 
     /* find successor of the joining node */
-    pair< pair<string,int> , lli > succNode;
+    pair<pair<string, int>, lli> succNode;
     succNode = nodeInfo.findSuccessor(nodeId);
 
     /* get Ip and port of successor as ip:port in char array to send */
     char ipAndPort[40];
     string succIp = succNode.first.first;
     string succPort = to_string(succNode.first.second);
-    strcpy(ipAndPort,combineIpAndPort(succIp,succPort).c_str());
+    strcpy(ipAndPort, combineIpAndPort(succIp, succPort).c_str());
 
     /* send ip and port info to the respective node */
-    sendto(newSock, ipAndPort, strlen(ipAndPort), 0, (struct sockaddr*) &client, l);
+    sendto(newSock, ipAndPort, strlen(ipAndPort), 0, (struct sockaddr *) &client, l);
 
 }
 
 /* send ip:port of predecessor of current node to contacting node */
-void HelperFunctions::sendPredecessor(NodeInformation nodeInfo,int newSock,struct sockaddr_in client){
+void HelperFunctions::sendPredecessor(ServerClass nodeInfo, int newSock, struct sockaddr_in client) {
 
-    pair< pair<string,int> , lli > predecessor = nodeInfo.getPredecessor();
+    pair<pair<string, int>, lli> predecessor = nodeInfo.getPredecessor();
 
     string ip = predecessor.first.first;
     string port = to_string(predecessor.first.second);
@@ -689,62 +631,60 @@ void HelperFunctions::sendPredecessor(NodeInformation nodeInfo,int newSock,struc
     socklen_t l = sizeof(client);
 
     /* if predecessor is nil */
-    if(ip == ""){
-        sendto(newSock, "", 0, 0, (struct sockaddr*) &client, l);
-    }
-
-    else{
-        string ipAndPort = combineIpAndPort(ip,port);
+    if (ip == "") {
+        sendto(newSock, "", 0, 0, (struct sockaddr *) &client, l);
+    } else {
+        string ipAndPort = combineIpAndPort(ip, port);
 
         char ipAndPortChar[40];
-        strcpy(ipAndPortChar,ipAndPort.c_str());
+        strcpy(ipAndPortChar, ipAndPort.c_str());
 
-        sendto(newSock, ipAndPortChar, strlen(ipAndPortChar), 0, (struct sockaddr*) &client, l);
+        sendto(newSock, ipAndPortChar, strlen(ipAndPortChar), 0, (struct sockaddr *) &client, l);
 
     }
 }
 
 /* get successor id of the node having ip address as ip and port num as port */
-lli HelperFunctions::getSuccessorId(string ip,int port){
+lli HelperFunctions::getSuccessorId(string ip, int port) {
 
     struct sockaddr_in serverToConnectTo;
     socklen_t l = sizeof(serverToConnectTo);
 
-    setServerDetails(serverToConnectTo,ip,port);
+    setServerDetails(serverToConnectTo, ip, port);
 
     /* set timer for socket */
     struct timeval timer;
     setTimer(timer);
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
 
-    if(sock < 0){
+    if (sock < 0) {
         perror("error");
         exit(-1);
     }
 
-    setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timer, sizeof(struct timeval));
 
-    if(sock < -1){
-        cout<<"socket cre error";
+    if (sock < -1) {
+        cout << "socket cre error";
         perror("error");
         exit(-1);
     }
 
     char msg[] = "finger";
 
-    if (sendto(sock, msg, strlen(msg) , 0, (struct sockaddr*) &serverToConnectTo, l) == -1){
+    if (sendto(sock, msg, strlen(msg), 0, (struct sockaddr *) &serverToConnectTo, l) == -1) {
         perror("error");
         exit(-1);
     }
 
     char succIdChar[40];
 
-    int len = recvfrom(sock,succIdChar,1024,0,(struct sockaddr*) &serverToConnectTo, &l);
+    int len = recvfrom(sock, succIdChar, 1024, 0, (struct sockaddr *) &serverToConnectTo, &l);
 
     close(sock);
 
-    if(len < 0){
+    if (len < 0) {
         return -1;
     }
 
@@ -754,50 +694,49 @@ lli HelperFunctions::getSuccessorId(string ip,int port){
 
 }
 
-void HelperFunctions::setTimer(struct timeval &timer){
+void HelperFunctions::setTimer(struct timeval &timer) {
     timer.tv_sec = 0;
     timer.tv_usec = 100000;
 }
 
 /* get predecessor node (ip:port) of the node having ip and port */
-pair< pair<string,int> , lli > HelperFunctions::getPredecessorNode(string ip,int port,string ipClient,int portClient,bool forStabilize){
+pair<pair<string, int>, lli>
+HelperFunctions::getPredecessorNode(string ip, int port, string ipClient, int portClient, bool forStabilize) {
 
     struct sockaddr_in serverToConnectTo;
     socklen_t l = sizeof(serverToConnectTo);
 
-    setServerDetails(serverToConnectTo,ip,port);
+    setServerDetails(serverToConnectTo, ip, port);
 
     /* set timer for socket */
     struct timeval timer;
     setTimer(timer);
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
 
-    if(sock < 0){
+    if (sock < 0) {
         perror("error");
         exit(-1);
     }
 
-    setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timer, sizeof(struct timeval));
 
     string msg = "";
 
     /* p2 means that just send predecessor of node ip:port , do not call notify */
     /* p1 means that this is for stabilize so notify node as well */
 
-    if(forStabilize == true){
-        msg = combineIpAndPort(ipClient,to_string(portClient));
+    if (forStabilize == true) {
+        msg = combineIpAndPort(ipClient, to_string(portClient));
         msg += "p1";
-    }
-
-    else
+    } else
         msg = "p2";
 
 
     char ipAndPortChar[40];
-    strcpy(ipAndPortChar,msg.c_str());
+    strcpy(ipAndPortChar, msg.c_str());
 
-    if (sendto(sock, ipAndPortChar, strlen(ipAndPortChar), 0, (struct sockaddr*) &serverToConnectTo, l) < 0){
+    if (sendto(sock, ipAndPortChar, strlen(ipAndPortChar), 0, (struct sockaddr *) &serverToConnectTo, l) < 0) {
         perror("error");
         exit(-1);
     }
@@ -806,8 +745,8 @@ pair< pair<string,int> , lli > HelperFunctions::getPredecessorNode(string ip,int
     int len = recvfrom(sock, ipAndPortChar, 1024, 0, (struct sockaddr *) &serverToConnectTo, &l);
     close(sock);
 
-    if(len < 0){
-        pair< pair<string,int> , lli > node;
+    if (len < 0) {
+        pair<pair<string, int>, lli> node;
         node.first.first = "";
         node.first.second = -1;
         node.second = -1;
@@ -817,20 +756,17 @@ pair< pair<string,int> , lli > HelperFunctions::getPredecessorNode(string ip,int
     ipAndPortChar[len] = '\0';
 
 
-
     string ipAndPort = ipAndPortChar;
     lli hash;
-    pair<string,int> ipAndPortPair;
+    pair<string, int> ipAndPortPair;
 
-    pair< pair<string,int> , lli > node;
+    pair<pair<string, int>, lli> node;
 
-    if(ipAndPort == ""){
+    if (ipAndPort == "") {
         node.first.first = "";
         node.first.second = -1;
         node.second = -1;
-    }
-
-    else{
+    } else {
         ipAndPortPair = getIpAndPort(ipAndPort);
         node.first.first = ipAndPortPair.first;
         node.first.second = ipAndPortPair.second;
@@ -841,38 +777,38 @@ pair< pair<string,int> , lli > HelperFunctions::getPredecessorNode(string ip,int
 }
 
 /* get successor list from node having ip and port */
-vector< pair<string,int> > HelperFunctions::getSuccessorListFromNode(string ip,int port){
+vector<pair<string, int> > HelperFunctions::getSuccessorListFromNode(string ip, int port) {
 
     struct sockaddr_in serverToConnectTo;
     socklen_t l = sizeof(serverToConnectTo);
 
-    setServerDetails(serverToConnectTo,ip,port);
+    setServerDetails(serverToConnectTo, ip, port);
 
     /* set timer for socket */
     struct timeval timer;
     setTimer(timer);
 
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
-    if(sock < 0){
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
         perror("error");
         exit(-1);
     }
 
-    setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timer, sizeof(struct timeval));
 
     char msg[] = "sendSuccList";
 
-    sendto(sock,msg,strlen(msg),0,(struct sockaddr *)&serverToConnectTo,l);
+    sendto(sock, msg, strlen(msg), 0, (struct sockaddr *) &serverToConnectTo, l);
 
     char succListChar[1000];
-    int len = recvfrom(sock,succListChar,1000,0,(struct sockaddr *)&serverToConnectTo,&l);
+    int len = recvfrom(sock, succListChar, 1000, 0, (struct sockaddr *) &serverToConnectTo, &l);
 
     close(sock);
 
 
-    if(len < 0){
-        vector< pair<string,int> > list;
+    if (len < 0) {
+        vector<pair<string, int> > list;
         return list;
     }
 
@@ -880,32 +816,32 @@ vector< pair<string,int> > HelperFunctions::getSuccessorListFromNode(string ip,i
 
     string succList = succListChar;
 
-    vector< pair<string,int> > list = seperateSuccessorList(succList);
+    vector<pair<string, int> > list = seperateSuccessorList(succList);
 
     return list;
 
 }
 
 /* send node's successor list to the contacting node */
-void HelperFunctions::sendSuccessorList(NodeInformation &nodeInfo,int sock,struct sockaddr_in client){
+void HelperFunctions::sendSuccessorList(ServerClass &nodeInfo, int sock, struct sockaddr_in client) {
     socklen_t l = sizeof(client);
 
-    vector< pair< pair<string,int> , lli > > list = nodeInfo.getSuccessorList();
+    vector<pair<pair<string, int>, lli> > list = nodeInfo.getSuccessorList();
 
     string successorList = splitSuccessorList(list);
 
     char successorListChar[1000];
-    strcpy(successorListChar,successorList.c_str());
+    strcpy(successorListChar, successorList.c_str());
 
-    sendto(sock,successorListChar,strlen(successorListChar),0,(struct sockaddr *)&client,l);
+    sendto(sock, successorListChar, strlen(successorListChar), 0, (struct sockaddr *) &client, l);
 
 }
 
 /* combine successor list in form of ip1:port1;ip2:port2;.. */
-string HelperFunctions::splitSuccessorList(vector< pair< pair<string,int> , lli > > list){
+string HelperFunctions::splitSuccessorList(vector<pair<pair<string, int>, lli> > list) {
     string res = "";
 
-    for(int i=1;i<=R;i++){
+    for (int i = 1; i <= R; i++) {
 
         res = res + list[i].first.first + ":" + to_string(list[i].first.second) + ";";
     }
@@ -914,62 +850,59 @@ string HelperFunctions::splitSuccessorList(vector< pair< pair<string,int> , lli 
 }
 
 /* send ack to contacting node that this node is still alive */
-void HelperFunctions::sendAcknowledgement(int newSock,struct sockaddr_in client){
+void HelperFunctions::sendAcknowledgement(int newSock, struct sockaddr_in client) {
     socklen_t l = sizeof(client);
 
-    sendto(newSock,"1",1,0,(struct sockaddr*)&client,l);
+    sendto(newSock, "1", 1, 0, (struct sockaddr *) &client, l);
 }
 
 /* check if node having ip and port is still alive or not */
-bool HelperFunctions::isNodeAlive(string ip,int port){
+bool HelperFunctions::isNodeAlive(string ip, int port) {
     struct sockaddr_in serverToConnectTo;
     socklen_t l = sizeof(serverToConnectTo);
 
-    setServerDetails(serverToConnectTo,ip,port);
+    setServerDetails(serverToConnectTo, ip, port);
 
     /* set timer for socket */
     struct timeval timer;
     setTimer(timer);
 
 
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
 
-    if(sock < 0){
+    if (sock < 0) {
         perror("error");
         exit(-1);
     }
 
     /* set timer on this socket */
-    setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(char*)&timer,sizeof(struct timeval));
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *) &timer, sizeof(struct timeval));
 
     char msg[] = "alive";
-    sendto(sock,msg,strlen(msg),0,(struct sockaddr *)&serverToConnectTo,l);
+    sendto(sock, msg, strlen(msg), 0, (struct sockaddr *) &serverToConnectTo, l);
 
     char response[5];
-    int len = recvfrom(sock,response,2,0,(struct sockaddr *)&serverToConnectTo,&l);
+    int len = recvfrom(sock, response, 2, 0, (struct sockaddr *) &serverToConnectTo, &l);
 
     close(sock);
 
     /* node is still active */
-    if(len >= 0){
+    if (len >= 0) {
         return true;
-    }
-    else
+    } else
         return false;
 }
 
 typedef long long int lli;
 
-void create(NodeInformation &nodeInfo);
-void join(NodeInformation &nodeInfo,string ip,string port);
-void printState(NodeInformation nodeInfo);
-void listenTo(NodeInformation &nodeInfo);
-void doStabilize(NodeInformation &nodeInfo);
-void callNotify(NodeInformation &nodeInfo,string ipAndPort);
-void callFixFingers(NodeInformation &nodeInfo);
-void doTask(NodeInformation &nodeInfo,int newSock,struct sockaddr_in client,string nodeIdString);
+void listenTo(ServerClass &nodeInfo);
 
-#endif
+void doStabilize(ServerClass &nodeInfo);
+
+void callNotify(ServerClass &nodeInfo, string ipAndPort);
+
+void doTask(ServerClass &nodeInfo, int newSock, struct sockaddr_in client, string nodeIdString);
+
 
 typedef long long int lli;
 
@@ -977,179 +910,61 @@ using namespace std;
 
 HelperFunctions help = HelperFunctions();
 
-/* create a new ring */
-void create(NodeInformation &nodeInfo){
-
-    string ip = nodeInfo.sp.getIpAddress();
-    int port = nodeInfo.sp.getPortNumber();
-
-    /* key to be hashed for a node is ip:port */
-    string key = ip+":"+(to_string(port));
-
-    lli hash = help.getHash(key);
-
-    /* setting id, successor , successor list , predecessor ,finger table and status of node */
-    nodeInfo.setId(hash);
-    nodeInfo.setSuccessor(ip,port,hash);
-    nodeInfo.setSuccessorList(ip,port,hash);
-    nodeInfo.setPredecessor("",-1,-1);
-    nodeInfo.setFingerTable(ip,port,hash);
-    nodeInfo.setStatus();
-
-    /* launch threads,one thread will listen to request from other nodes,one will do stabilization */
-    thread second(listenTo,ref(nodeInfo));
-    second.detach();
-
-    thread fifth(doStabilize,ref(nodeInfo));
-    fifth.detach();
-
-}
 
 /* join in a DHT ring */
-void join(NodeInformation &nodeInfo,string ip,string port){
+void join(ServerClass &nodeInfo, string ip, string port) {
 
-
-    /* set server socket details */
-    struct sockaddr_in server;
-
-    socklen_t l = sizeof(server);
-
-    help.setServerDetails(server,ip,stoi(port));
-
-    int sock = socket(AF_INET,SOCK_DGRAM,0);
-
-    if(sock < 0){
-        perror("error");
-        exit(-1);
-    }
-
-    string currIp = nodeInfo.sp.getIpAddress();
-    string currPort = to_string(nodeInfo.sp.getPortNumber());
-
-    /* generate id of current node */
-    lli nodeId = help.getHash(currIp+":"+currPort);
-
-    char charNodeId[41];
-    strcpy(charNodeId,to_string(nodeId).c_str());
-
-
-    /* node sends it's id to main node to find it's successor */
-    if (sendto(sock, charNodeId, strlen(charNodeId), 0, (struct sockaddr*) &server, l) == -1){
-        cout<<"yaha 1\n";
-        perror("error");
-        exit(-1);
-    }
-
-    /* node receives id and port of it's successor */
-    char ipAndPort[40];
-    int len;
-    if ((len = recvfrom(sock, ipAndPort, 1024, 0, (struct sockaddr *) &server, &l)) == -1){
-        cout<<"yaha 2\n";
-        perror("error");
-        exit(-1);
-    }
-    ipAndPort[len] = '\0';
-
-    close(sock);
-
-    cout<<"Successfully joined the ring\n";
-
-    string key = ipAndPort;
-    lli hash = help.getHash(key);
-    pair<string,int> ipAndPortPair = help.getIpAndPort(key);
-
-    /* setting id, successor , successor list , predecessor, finger table and status */
-    nodeInfo.setId(nodeId);
-    nodeInfo.setSuccessor(ipAndPortPair.first,ipAndPortPair.second,hash);
-    nodeInfo.setSuccessorList(ipAndPortPair.first,ipAndPortPair.second,hash);
-    nodeInfo.setPredecessor("",-1,-1);
-    nodeInfo.setFingerTable(ipAndPortPair.first,ipAndPortPair.second,hash);
-    nodeInfo.setStatus();
-
-    /* launch threads,one thread will listen to request from other nodes,one will do stabilization */
-    thread fourth(listenTo,ref(nodeInfo));
-    fourth.detach();
-
-    thread third(doStabilize,ref(nodeInfo));
-    third.detach();
 
 }
 
 
 /* print successor,predecessor,successor list and finger table of node */
-void printState(NodeInformation nodeInfo){
-    string ip = nodeInfo.sp.getIpAddress();
-    lli id = nodeInfo.getId();
-    int port = nodeInfo.sp.getPortNumber();
-    vector< pair< pair<string,int> , lli > > fingerTable = nodeInfo.getFingerTable();
-    cout<<"Self "<<ip<<" "<<port<<" "<<id<<endl;
-    pair< pair<string,int> , lli > succ = nodeInfo.getSuccessor();
-    pair< pair<string,int> , lli > pre = nodeInfo.getPredecessor();
-    vector < pair< pair<string,int> , lli > > succList = nodeInfo.getSuccessorList();
-    cout<<"Succ "<<succ.first.first<<" "<<succ.first.second<<" "<<succ.second<<endl;
-    cout<<"Pred "<<pre.first.first<<" "<<pre.first.second<<" "<<pre.second<<endl;
-    for(int i=1;i<=M;i++){
-        ip = fingerTable[i].first.first;
-        port = fingerTable[i].first.second;
-        id = fingerTable[i].second;
-        cout<<"Finger["<<i<<"] "<<id<<" "<<ip<<" "<<port<<endl;
-    }
-    for(int i=1;i<=R;i++){
-        ip = succList[i].first.first;
-        port = succList[i].first.second;
-        id = succList[i].second;
-        cout<<"Successor["<<i<<"] "<<id<<" "<<ip<<" "<<port<<endl;
-    }
+void printState(ServerClass nodeInfo) {
+
 }
 
 /* perform different tasks according to received msg */
-void doTask(NodeInformation &nodeInfo,int newSock,struct sockaddr_in client,string nodeIdString){
+void doTask(ServerClass &nodeInfo, int newSock, struct sockaddr_in client, string nodeIdString) {
 
 
-    if(nodeIdString.find("alive") != -1){
-        help.sendAcknowledgement(newSock,client);
+    if (nodeIdString.find("alive") != -1) {
+        help.sendAcknowledgement(newSock, client);
     }
 
         /* contacting node wants successor list of this node */
-    else if(nodeIdString.find("sendSuccList") != -1){
-        help.sendSuccessorList(nodeInfo,newSock,client);
-    }
-
-
-        /* contacting node has run get command so send value of key it requires */
-    else if(nodeIdString.find("k") != -1){
-        help.sendValToNode(nodeInfo,newSock,client,nodeIdString);
+    else if (nodeIdString.find("sendSuccList") != -1) {
+        help.sendSuccessorList(nodeInfo, newSock, client);
     }
 
         /* contacting node wants the predecessor of this node */
-    else if(nodeIdString.find("p") != -1){
-        help.sendPredecessor(nodeInfo,newSock,client);
+    else if (nodeIdString.find("p") != -1) {
+        help.sendPredecessor(nodeInfo, newSock, client);
 
         /* p1 in msg means that notify the current node about this contacting node */
-        if(nodeIdString.find("p1") != -1){
-            callNotify(nodeInfo,nodeIdString);
+        if (nodeIdString.find("p1") != -1) {
+            callNotify(nodeInfo, nodeIdString);
         }
     }
 
         /* contacting node wants successor Id of this node for help in finger table */
-    else if(nodeIdString.find("finger") != -1){
-        help.sendSuccessorId(nodeInfo,newSock,client);
+    else if (nodeIdString.find("finger") != -1) {
+        help.sendSuccessorId(nodeInfo, newSock, client);
     }
 
         /* contacting node wants current node to find successor for it */
-    else{
-        help.sendSuccessor(nodeInfo,nodeIdString,newSock,client);
+    else {
+        help.sendSuccessor(nodeInfo, nodeIdString, newSock, client);
     }
 
 }
 
 /* listen to any contacting node */
-void listenTo(NodeInformation &nodeInfo){
+void listenTo(ServerClass &nodeInfo) {
     struct sockaddr_in client;
     socklen_t l = sizeof(client);
 
     /* wait for any client to connect and create a new thread as soon as one connects */
-    while(1){
+    while (1) {
         char charNodeId[40];
         int sock = nodeInfo.sp.getSocketFd();
         int len = recvfrom(sock, charNodeId, 1024, 0, (struct sockaddr *) &client, &l);
@@ -1157,16 +972,16 @@ void listenTo(NodeInformation &nodeInfo){
         string nodeIdString = charNodeId;
 
         /* launch a thread that will perform diff tasks acc to received msg */
-        thread f(doTask,ref(nodeInfo),sock,client,nodeIdString);
+        thread f(doTask, ref(nodeInfo), sock, client, nodeIdString);
         f.detach();
     }
 }
 
 
-void doStabilize(NodeInformation &nodeInfo){
+void doStabilize(ServerClass &nodeInfo) {
 
     /* do stabilize tasks */
-    while(1){
+    while (1) {
 
         nodeInfo.checkPredecessor();
 
@@ -1183,18 +998,18 @@ void doStabilize(NodeInformation &nodeInfo){
 }
 
 /* call notify of current node which will notify curr node of contacting node */
-void callNotify(NodeInformation &nodeInfo,string ipAndPort){
+void callNotify(ServerClass &nodeInfo, string ipAndPort) {
 
     ipAndPort.pop_back();
     ipAndPort.pop_back();
 
     /* get ip and port of client node */
-    pair< string , int > ipAndPortPair = help.getIpAndPort(ipAndPort);
+    pair<string, int> ipAndPortPair = help.getIpAndPort(ipAndPort);
     string ip = ipAndPortPair.first;
     int port = ipAndPortPair.second;
     lli hash = help.getHash(ipAndPort);
 
-    pair< pair<string,int> , lli > node;
+    pair<pair<string, int>, lli> node;
     node.first.first = ip;
     node.first.second = port;
     node.second = hash;
@@ -1205,7 +1020,7 @@ void callNotify(NodeInformation &nodeInfo,string ipAndPort){
 
 int PORT;
 
-NodeInformation nodeInfo = NodeInformation();
+ServerClass nodeInfo = ServerClass();
 
 KVCache cacheMap;
 
@@ -1224,7 +1039,6 @@ public:
 
 
     virtual ~Node() = default;
-
 
 
     static void HandleRequest(int new_socket, int valread, const char *buffer1) {
@@ -1273,42 +1087,31 @@ public:
             if (debugger_mode) {
                 cout << "Value=" << value << "\n";
             }
-            if(nodeInfo.getStatus() == false){
-                cout<<"Sorry this node is not in the ring\n";
-            }
-            else
-                cout<<"Trying to put"<<key<<" "<<value<<std::endl;
+            if (nodeInfo.getStatus() == false) {
+                cout << "Sorry this node is not in the ring\n";
+            } else
+                cout << "Trying to put" << key << " " << value << std::endl;
             response = "Success";
-        }
-
-        else if (request_type == "DEL") {
+        } else if (request_type == "DEL") {
             value = "";
             if (debugger_mode) {
                 cout << "Value=" << value << "\n";
             }
 
 
-            if(nodeInfo.getStatus() == false){
-                cout<<"Sorry this node is not in the ring\n";
-            }
-            else {
-                  cout<<"Trying to delete"<<key<<std::endl;
+            if (nodeInfo.getStatus() == false) {
+                cout << "Sorry this node is not in the ring\n";
+            } else {
+                cout << "Trying to delete" << key << std::endl;
             }
             response = "Success";
-        }
-
-
-
-        else if (request_type == "GET") {
-            if(nodeInfo.getStatus() == false){
-                cout<<"Sorry this node is not in the ring\n";
-                response="Does not exist";
-            }
-            else
-                response="Finding";
-        }
-
-        else {
+        } else if (request_type == "GET") {
+            if (nodeInfo.getStatus() == false) {
+                cout << "Sorry this node is not in the ring\n";
+                response = "Does not exist";
+            } else
+                response = "Finding";
+        } else {
             response = error_msg;
         }
         response = toXML(response);
@@ -1326,8 +1129,6 @@ public:
     static int run() {
 
         int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-
-
         struct sockaddr_in address = {address.sin_family = AF_INET,
                 address.sin_port = htons(PORT),
                 address.sin_addr.s_addr = INADDR_ANY};
@@ -1373,13 +1174,6 @@ public:
             valread = read(new_socket, buffer1, max_buffer_size);
             buffer1[valread] = '\0';
 
-//            string command;
-//            cout<<"Here";
-//            getline(cin,command);
-//            if(command=="print"){
-//                nodeInfo.printKeys();
-//            }
-//            command.erase();
             auto future = pool.submit(HandleRequest, new_socket, valread, buffer1);
             future.get();
 
@@ -1411,52 +1205,134 @@ int main(int argc, char *argv[]) {
             cout << "Dump to file " << argv[2] << " successful." << std::endl;
         }
 
-        }
+    }
 
-        nodeInfo.sp.specifyPortServer();
-        PORT=nodeInfo.sp.getPortNumber();
-        cout<<"Now listening at port number "<<nodeInfo.sp.getPortNumber()<<endl;
+    nodeInfo.sp.setPortServer();
+    PORT = nodeInfo.sp.getPortNumber();
+    cout << "Now listening at port number " << nodeInfo.sp.getPortNumber() << endl;
 
 
     int choice;
-    while(true)
-    {
+    while (true) {
         cout << "======================================\n"
                 "Enter 1 to create a new ring\n"
                 "Enter 2 to join some existing ring\n"
+                "Enter 3 to display finger table\n"
                 "=========================================\n";
 
-        cin >>choice;
+        cin >> choice;
+        if (choice == 1) {
+            if (nodeInfo.getStatus() == true) {
+                cout << "Sorry but this node is already on the ring\n";
+            } else {
 
+                string ip = nodeInfo.sp.getIpAddress();
+                int port = nodeInfo.sp.getPortNumber();
 
-        if(choice == 1)
-        {
-            if(nodeInfo.getStatus() == true){
-                cout<<"Sorry but this node is already on the ring\n";
+                /* key to be hashed for a node is ip:port */
+                string key = ip + ":" + (to_string(port));
+
+                lli hash = help.getHash(key);
+
+                nodeInfo.id = hash;
+
+                nodeInfo.setSuccessor(ip, port, hash);
+                nodeInfo.setSuccessorList(ip, port, hash);
+                nodeInfo.predecessor.first.first = ""; //IP
+                nodeInfo.predecessor.first.second = -1; //PORT
+                nodeInfo.predecessor.second = -1; //HASH
+                nodeInfo.setFingerTable(ip, port, hash);
+                nodeInfo.isInRing = true;;
+
+                thread second(listenTo, ref(nodeInfo));
+                second.detach();
+
+                thread fifth(doStabilize, ref(nodeInfo));
+                fifth.detach();
             }
-            else{
-                thread first(create,ref(nodeInfo));
-                first.detach();
-            }
-        }
-        else if(choice==2)
-        {
-            string ip="127.0.0.1";
+        } else if (choice == 2) {
+            string ip = "127.0.0.1";
             string port;
             cout << "Enter port number \n";
 //            cin>>ip;
-            cin>>port;
-            if(nodeInfo.getStatus() == true){
-                cout<<"Sorry but this node is already on the ring\n";
-            }
-            else
-                join(nodeInfo,ip,port);
+            cin >> port;
+            if (nodeInfo.getStatus() == true) {
+                cout << "Sorry but this node is already on the ring\n";
+            } else {    /* set server socket details */
+                struct sockaddr_in server;
 
-        } else if(choice==3){
-            printState(nodeInfo);
-        }
-        else
-        {
+                socklen_t l = sizeof(server);
+
+                help.setServerDetails(server, ip, stoi(port));
+
+                int sock = socket(AF_INET, SOCK_DGRAM, 0);
+
+                if (sock < 0) {
+                    perror("error");
+                    exit(-1);
+                }
+
+                string currIp = nodeInfo.sp.getIpAddress();
+                string currPort = to_string(nodeInfo.sp.getPortNumber());
+
+                /* generate id of current node */
+                lli nodeId = help.getHash(currIp + ":" + currPort);
+
+                char charNodeId[41];
+                strcpy(charNodeId, to_string(nodeId).c_str());
+
+
+                /* node sends it's id to main node to find it's successor */
+                if (sendto(sock, charNodeId, strlen(charNodeId), 0, (struct sockaddr *) &server, l) == -1) {
+                    perror("error");
+                    exit(-1);
+                }
+
+                /* node receives id and port of it's successor */
+                char ipAndPort[40];
+                int len;
+                if ((len = recvfrom(sock, ipAndPort, 1024, 0, (struct sockaddr *) &server, &l)) == -1) {
+                    perror("error");
+                    exit(-1);
+                }
+                ipAndPort[len] = '\0';
+
+                close(sock);
+
+                cout << "Successfully joined the ring\n";
+
+                string key = ipAndPort;
+                lli hash = help.getHash(key);
+                pair<string, int> ipAndPortPair = help.getIpAndPort(key);
+
+                /* setting id, successor , successor list , predecessor, finger table and status */
+                nodeInfo.id = nodeId;
+
+                nodeInfo.setSuccessor(ipAndPortPair.first, ipAndPortPair.second, hash);
+                nodeInfo.setSuccessorList(ipAndPortPair.first, ipAndPortPair.second, hash);
+                nodeInfo.predecessor.first.first = ""; //IP
+                nodeInfo.predecessor.first.second = -1; //PORT
+                nodeInfo.predecessor.second = -1; //HASH
+                nodeInfo.setFingerTable(ipAndPortPair.first, ipAndPortPair.second, hash);
+                nodeInfo.isInRing = true;
+
+
+                thread listenerThread(listenTo, ref(nodeInfo));
+                listenerThread.detach();
+
+                thread StabalizerThread(doStabilize, ref(nodeInfo));
+                StabalizerThread.detach();
+            }
+
+        } else if (choice == 3) {
+            int port;
+            vector<pair<pair<string, int>, lli> > succList = nodeInfo.getSuccessorList();
+            for (int i = 1; i <= M; i++) {
+                port = nodeInfo.fingerTable[i].first.second;
+                lli hash = nodeInfo.fingerTable[i].second;
+                cout << i << ": " << port << " "<< hash << endl;
+            }
+        } else {
             cout << "Wrong choice enter again\n";
         }
     }

@@ -14,7 +14,6 @@
 #define sizeOfSet 20
 
 
-#include "config.h"
 #include <cmath>
 #include <iostream>
 #include <cstring>

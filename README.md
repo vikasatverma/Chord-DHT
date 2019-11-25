@@ -38,11 +38,11 @@ main.cpp is the main file
 
 All important functions are inside the file functions.cpp
 
-A class named NodeInformation is made which contains all the information of a Node and all the functions which every node performs
+A class named ServerClass is made which contains all the information of a Node and all the functions which every node performs
 to maintain correct information about the ring. 
 
-Another class SocketAndPort is made which contains
-all the information about socket ,ip address and port number. Object of class SocketAndPort is inside NodeInformation class
+Another class PORTClass is made which contains
+all the information about socket ,ip address and port number. Object of class PORTClass is inside ServerClass class
 
 Another class HelperClass is made which contains all helper functions which are required by a node to perform various tasks
 
