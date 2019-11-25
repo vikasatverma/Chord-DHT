@@ -29,9 +29,6 @@ public:
 };
 
 class ServerClass {
-private:
-    pair<pair<string, int>, lli> successor;
-    vector<pair<pair<string, int>, lli> > successorList;
 
 public:
     PORTClass sp{};
@@ -61,23 +58,15 @@ public:
     void setFingerTable(string ip, int port, lli hash);
 
 
-    lli getId();
 
 
-    vector<pair<pair<string, int>, lli> > getFingerTable();
-
-    pair<pair<string, int>, lli> getSuccessor();
-
-    pair<pair<string, int>, lli> getPredecessor();
-
-    vector<pair<pair<string, int>, lli> > getSuccessorList();
-
-    bool getStatus();
 
     bool isInRing;
     pair<pair<string, int>, lli> predecessor;
     lli id{};
     vector<pair<pair<string, int>, lli> > fingerTable;
+    pair<pair<string, int>, lli> successor;
+    vector<pair<pair<string, int>, lli> > successorList;
 };
 
 
@@ -126,7 +115,7 @@ public:
 void PORTClass::setPortServer() {
 
     /* generating a port number between 1024 and 65535 */
-    srand(time(0));
+    srand(time(nullptr));
     portNoServer = rand() % 65536;
     if (portNoServer < 1024)
         portNoServer += 1024;
@@ -160,8 +149,6 @@ int PORTClass::getPortNumber() {
 int PORTClass::getSocketFd() {
     return sock;
 }
-
-using namespace std;
 
 
 ServerClass::ServerClass() {
@@ -428,10 +415,6 @@ void ServerClass::checkSuccessor() {
 
 void ServerClass::notify(pair<pair<string, int>, lli> node) {
 
-    /* get id of node and predecessor */
-    lli predecessorHash = predecessor.second;
-    lli nodeHash = node.second;
-
     predecessor = node;
 
     /* if node's successor is node itself then set it's successor to this node */
@@ -461,30 +444,6 @@ void ServerClass::fixFingers() {
         next++;
     }
 
-}
-
-vector<pair<pair<string, int>, lli> > ServerClass::getFingerTable() {
-}
-
-lli ServerClass::getId() {
-    return id;
-}
-
-pair<pair<string, int>, lli> ServerClass::getSuccessor() {
-    return successor;
-}
-
-pair<pair<string, int>, lli> ServerClass::getPredecessor() {
-    return predecessor;
-}
-
-
-vector<pair<pair<string, int>, lli> > ServerClass::getSuccessorList() {
-    return successorList;
-}
-
-bool ServerClass::getStatus() {
-    return isInRing;
 }
 
 
@@ -586,7 +545,7 @@ string HelperFunctions::combineIpAndPort(string ip, string port) {
 /* send successor id of current node to the contacting node */
 void HelperFunctions::sendSuccessorId(ServerClass nodeInfo, int newSock, struct sockaddr_in client) {
 
-    pair<pair<string, int>, lli> succ = nodeInfo.getSuccessor();
+    pair<pair<string, int>, lli> succ = nodeInfo.successor;
     string succId = to_string(succ.second);
     char succIdChar[40];
 
@@ -623,7 +582,7 @@ void HelperFunctions::sendSuccessor(ServerClass nodeInfo, string nodeIdString, i
 /* send ip:port of predecessor of current node to contacting node */
 void HelperFunctions::sendPredecessor(ServerClass nodeInfo, int newSock, struct sockaddr_in client) {
 
-    pair<pair<string, int>, lli> predecessor = nodeInfo.getPredecessor();
+    pair<pair<string, int>, lli> predecessor = nodeInfo.predecessor;
 
     string ip = predecessor.first.first;
     string port = to_string(predecessor.first.second);
@@ -826,7 +785,7 @@ vector<pair<string, int> > HelperFunctions::getSuccessorListFromNode(string ip, 
 void HelperFunctions::sendSuccessorList(ServerClass &nodeInfo, int sock, struct sockaddr_in client) {
     socklen_t l = sizeof(client);
 
-    vector<pair<pair<string, int>, lli> > list = nodeInfo.getSuccessorList();
+    vector<pair<pair<string, int>, lli> > list = nodeInfo.successorList;
 
     string successorList = splitSuccessorList(list);
 
@@ -911,17 +870,6 @@ using namespace std;
 HelperFunctions help = HelperFunctions();
 
 
-/* join in a DHT ring */
-void join(ServerClass &nodeInfo, string ip, string port) {
-
-
-}
-
-
-/* print successor,predecessor,successor list and finger table of node */
-void printState(ServerClass nodeInfo) {
-
-}
 
 /* perform different tasks according to received msg */
 void doTask(ServerClass &nodeInfo, int newSock, struct sockaddr_in client, string nodeIdString) {
@@ -1087,10 +1035,7 @@ public:
             if (debugger_mode) {
                 cout << "Value=" << value << "\n";
             }
-            if (nodeInfo.getStatus() == false) {
-                cout << "Sorry this node is not in the ring\n";
-            } else
-                cout << "Trying to put" << key << " " << value << std::endl;
+
             response = "Success";
         } else if (request_type == "DEL") {
             value = "";
@@ -1099,17 +1044,11 @@ public:
             }
 
 
-            if (nodeInfo.getStatus() == false) {
-                cout << "Sorry this node is not in the ring\n";
-            } else {
-                cout << "Trying to delete" << key << std::endl;
-            }
+
             response = "Success";
         } else if (request_type == "GET") {
-            if (nodeInfo.getStatus() == false) {
                 cout << "Sorry this node is not in the ring\n";
                 response = "Does not exist";
-            } else
                 response = "Finding";
         } else {
             response = error_msg;
@@ -1218,13 +1157,11 @@ int main(int argc, char *argv[]) {
                 "Enter 1 to create a new ring\n"
                 "Enter 2 to join some existing ring\n"
                 "Enter 3 to display finger table\n"
-                "=========================================\n";
+                "======================================\n";
 
         cin >> choice;
         if (choice == 1) {
-            if (nodeInfo.getStatus() == true) {
-                cout << "Sorry but this node is already on the ring\n";
-            } else {
+
 
                 string ip = nodeInfo.sp.getIpAddress();
                 int port = nodeInfo.sp.getPortNumber();
@@ -1249,16 +1186,13 @@ int main(int argc, char *argv[]) {
 
                 thread fifth(doStabilize, ref(nodeInfo));
                 fifth.detach();
-            }
         } else if (choice == 2) {
             string ip = "127.0.0.1";
             string port;
             cout << "Enter port number \n";
 //            cin>>ip;
             cin >> port;
-            if (nodeInfo.getStatus() == true) {
-                cout << "Sorry but this node is already on the ring\n";
-            } else {    /* set server socket details */
+
                 struct sockaddr_in server;
 
                 socklen_t l = sizeof(server);
@@ -1322,15 +1256,17 @@ int main(int argc, char *argv[]) {
 
                 thread StabalizerThread(doStabilize, ref(nodeInfo));
                 StabalizerThread.detach();
-            }
+
 
         } else if (choice == 3) {
             int port;
-            vector<pair<pair<string, int>, lli> > succList = nodeInfo.getSuccessorList();
+            vector<pair<pair<string, int>, lli> > succList = nodeInfo.successorList;
+            lli id = nodeInfo.id;
+            cout<<"Curr ID: "<<id<<std::endl;
             for (int i = 1; i <= M; i++) {
                 port = nodeInfo.fingerTable[i].first.second;
                 lli hash = nodeInfo.fingerTable[i].second;
-                cout << i << ": " << port << " "<< hash << endl;
+                cout << i << ": " << port << " "<< hash <<endl;
             }
         } else {
             cout << "Wrong choice enter again\n";
