@@ -45,9 +45,6 @@ public:
 
     void notify(pair<pair<string, int>, lli> node);
 
-    void checkPredecessor();
-
-    void checkSuccessor();
 
     void updateSuccessorList();
 
@@ -373,45 +370,8 @@ void ServerClass::stabilize() {
 
 }
 
-/* check if current node's predecessor is still alive */
-void ServerClass::checkPredecessor() {
-    if (predecessor.second == -1)
-        return;
 
-    HelperFunctions help;
-    string ip = predecessor.first.first;
-    int port = predecessor.first.second;
 
-    if (help.isNodeAlive(ip, port) == false) {
-        /* if node has same successor and predecessor then set node as it's successor itself */
-        if (predecessor.second == successor.second) {
-            successor.first.first = sp.getIpAddress();
-            successor.first.second = sp.getPortNumber();
-            successor.second = id;
-            setSuccessorList(successor.first.first, successor.first.second, id);
-        }
-        predecessor.first.first = "";
-        predecessor.first.second = -1;
-        predecessor.second = -1;
-    }
-
-}
-
-/* check if current node's successor is still alive */
-void ServerClass::checkSuccessor() {
-    if (successor.second == id)
-        return;
-
-    HelperFunctions help;
-    string ip = successor.first.first;
-    int port = successor.first.second;
-
-    if (!help.isNodeAlive(ip, port)) {
-        successor = successorList[2];
-        updateSuccessorList();
-    }
-
-}
 
 void ServerClass::notify(pair<pair<string, int>, lli> node) {
 
@@ -931,9 +891,7 @@ void doStabilize(ServerClass &nodeInfo) {
     /* do stabilize tasks */
     while (1) {
 
-        nodeInfo.checkPredecessor();
 
-        nodeInfo.checkSuccessor();
 
         nodeInfo.stabilize();
 
